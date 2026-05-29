@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Coffee | Signup & Sign In</title>
+  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #3b0a0a;
+      --bg2:      #4a1010;
+      --accent:   #e8a020;
+      --white:    #ffffff;
+      --w80:      rgba(255,255,255,0.80);
+      --w20:      rgba(255,255,255,0.12);
+      --w10:      rgba(255,255,255,0.07);
+      --red:      #ff6060;
+      --green:    #50d080;
+      --radius:   13px;
+    }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: var(--bg);
+      color: var(--white);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── NAV ── */
+    nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 56px;
+      background: var(--bg);
+      border-bottom: 1px solid var(--w20);
+      position: sticky; top: 0; z-index: 100;
+    }
+    .logo { display: flex; align-items: center; gap: 9px; font-size: 1.55rem; font-weight: 700; color: var(--white); text-decoration: none; }
+    .logo span { font-size: 1.7rem; }
+    nav ul { display: flex; gap: 26px; list-style: none; }
+    nav ul li a { text-decoration: none; color: var(--w80); font-size: .9rem; font-weight: 500; transition: color .2s; }
+    nav ul li a:hover, nav ul li a.active { color: var(--accent); }
+    .cart-btn { display: flex; align-items: center; gap: 7px; background: none; border: none; color: var(--white); font-size: .9rem; cursor: pointer; font-family: 'Poppins', sans-serif; font-weight: 500; }
+    .cart-count { background: var(--accent); color: #3b0a0a; border-radius: 50%; width: 19px; height: 19px; display: inline-flex; align-items: center; justify-content: center; font-size: .72rem; font-weight: 700; }
+
+    /* ── HERO ── */
+    .hero { text-align: center; padding: 36px 20px 6px; background: linear-gradient(135deg,#4a1010,#3b0a0a); }
+    .hero h1 { font-family: 'Dancing Script', cursive; color: var(--accent); font-size: 2.3rem; margin-bottom: 4px; }
+    .hero p  { color: var(--w80); font-size: .9rem; }
+
+    /* ── TABS ── */
+    .tab-wrap { display: flex; justify-content: center; margin: 28px 0 0; }
+    .tab-toggle { display: flex; background: var(--w10); border: 1px solid var(--w20); border-radius: 50px; padding: 5px; }
+    .tab-btn { padding: 10px 36px; border: none; border-radius: 50px; background: transparent; color: var(--w80); font-family: 'Poppins', sans-serif; font-size: .92rem; font-weight: 500; cursor: pointer; transition: background .3s, color .3s; }
+    .tab-btn.active { background: var(--accent); color: #3b0a0a; font-weight: 700; }
+
+    /* ── MAIN ── */
+    .main { flex: 1; display: flex; justify-content: center; align-items: flex-start; padding: 36px 20px 60px; }
+
+    /* ── CARD ── */
+    .card { width: 100%; max-width: 490px; background: var(--w10); border: 1px solid var(--w20); border-radius: 22px; padding: 38px 44px; backdrop-filter: blur(8px); box-shadow: 0 20px 60px rgba(0,0,0,.45); animation: fadeUp .4s ease both; }
+    @keyframes fadeUp { from { opacity:0; transform:translateY(22px); } to { opacity:1; transform:translateY(0); } }
+    .card h2 { font-size: 1.5rem; font-weight: 700; margin-bottom: 5px; }
+    .card p.sub { color: var(--w80); font-size: .86rem; margin-bottom: 26px; }
+
+    /* ── FORM ── */
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; font-size: .83rem; font-weight: 500; margin-bottom: 6px; color: var(--w80); }
+
+    /* input hint badge */
+    .input-hint { display: inline-block; font-size: .7rem; background: var(--w20); color: var(--accent); border-radius: 4px; padding: 1px 6px; margin-left: 6px; font-weight: 600; vertical-align: middle; letter-spacing: .3px; }
+
+    .input-wrap { position: relative; }
+    .input-wrap i.icon { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); color: var(--accent); font-size: .88rem; pointer-events: none; }
+    .input-wrap input {
+      width: 100%; padding: 12px 40px 12px 38px;
+      background: var(--w10); border: 1.5px solid var(--w20); border-radius: var(--radius);
+      color: var(--white); font-family: 'Poppins', sans-serif; font-size: .91rem;
+      outline: none; transition: border-color .25s, background .25s;
+    }
+    .input-wrap input::placeholder { color: rgba(255,255,255,.3); }
+    .input-wrap input:focus { border-color: var(--accent); background: rgba(255,255,255,.09); }
+    .input-wrap input.valid   { border-color: var(--green) !important; }
+    .input-wrap input.invalid { border-color: var(--red)   !important; }
+
+    /* status icon inside input */
+    .status-icon { position: absolute; right: 38px; top: 50%; transform: translateY(-50%); font-size: .82rem; display: none; pointer-events: none; }
+    .status-icon.show { display: block; }
+    .status-icon.ok  { color: var(--green); }
+    .status-icon.bad { color: var(--red); }
+
+    .eye-btn { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--w80); cursor: pointer; font-size: .88rem; padding: 0; }
+    .eye-btn:hover { color: var(--accent); }
+
+    /* field error */
+    .field-err { font-size: .75rem; color: var(--red); margin-top: 4px; display: none; }
+    .field-err.show { display: block; }
+
+    /* password strength */
+    .str-bars { display: flex; gap: 5px; margin-top: 7px; }
+    .str-bars span { flex: 1; height: 4px; border-radius: 2px; background: var(--w20); transition: background .3s; }
+    .str-label { font-size: .74rem; margin-top: 4px; color: var(--w80); min-height: 13px; }
+
+    .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 13px; }
+
+    /* checkbox rows */
+    .check-row { display: flex; align-items: flex-start; gap: 9px; margin-bottom: 20px; }
+    .check-row input[type="checkbox"] { accent-color: var(--accent); margin-top: 3px; width: 14px; height: 14px; flex-shrink: 0; }
+    .check-row label { font-size: .8rem; color: var(--w80); line-height: 1.4; }
+    .check-row label a { color: var(--accent); text-decoration: none; }
+
+    .rem-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+    .rem-row label { display: flex; align-items: center; gap: 7px; font-size: .83rem; color: var(--w80); cursor: pointer; }
+    .rem-row input[type="checkbox"] { accent-color: var(--accent); }
+    .forgot { font-size: .83rem; color: var(--accent); text-decoration: none; font-weight: 500; cursor: pointer; }
+    .forgot:hover { text-decoration: underline; }
+
+    /* primary button */
+    .btn-primary { width: 100%; padding: 13px; border: none; border-radius: 50px; background: var(--accent); color: #3b0a0a; font-family: 'Poppins', sans-serif; font-size: .98rem; font-weight: 700; cursor: pointer; transition: background .25s, transform .15s, box-shadow .25s; box-shadow: 0 4px 18px rgba(232,160,32,.28); }
+    .btn-primary:hover { background: #f0b030; transform: translateY(-2px); box-shadow: 0 8px 28px rgba(232,160,32,.38); }
+    .btn-primary:active { transform: translateY(0); }
+    .btn-primary:disabled { opacity: .7; cursor: not-allowed; transform: none; }
+
+    /* divider */
+    .divider { display: flex; align-items: center; gap: 11px; margin: 20px 0; color: var(--w80); font-size: .8rem; }
+    .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--w20); }
+
+    /* social */
+    .social-row { display: grid; grid-template-columns: 1fr 1fr; gap: 11px; }
+    .btn-social { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 10px; border: 1.5px solid var(--w20); border-radius: var(--radius); background: var(--w10); color: var(--white); font-family: 'Poppins', sans-serif; font-size: .85rem; font-weight: 500; cursor: pointer; transition: border-color .25s, background .25s; }
+    .btn-social:hover { border-color: var(--accent); background: rgba(232,160,32,.09); }
+    .g-icon  { color: #ea4335; }
+    .fb-icon { color: #1877f2; }
+
+    .switch-link { text-align: center; margin-top: 22px; font-size: .84rem; color: var(--w80); }
+    .switch-link a { color: var(--accent); font-weight: 600; text-decoration: none; cursor: pointer; }
+    .switch-link a:hover { text-decoration: underline; }
+
+    /* message bar */
+    .msg { padding: 10px 13px; border-radius: 10px; font-size: .83rem; margin-bottom: 14px; display: none; }
+    .msg.show { display: block; }
+    .msg.error   { background: rgba(220,60,60,.18); border: 1px solid rgba(220,60,60,.35); color: #ff9090; }
+    .msg.success { background: rgba(60,200,100,.18); border: 1px solid rgba(60,200,100,.35); color: #80e8a0; }
+
+    /* spinner */
+    .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(59,10,10,.35); border-top-color: #3b0a0a; border-radius: 50%; animation: spin .7s linear infinite; vertical-align: middle; margin-left: 8px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* toast */
+    #toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--accent); color: #3b0a0a; padding: 11px 26px; border-radius: 50px; font-weight: 700; font-size: .9rem; box-shadow: 0 8px 30px rgba(0,0,0,.35); z-index: 999; transition: transform .4s cubic-bezier(.34,1.56,.64,1); white-space: nowrap; }
+    #toast.show { transform: translateX(-50%) translateY(0); }
+
+    /* pages */
+    #page-signup, #page-signin { display: none; }
+    #page-signup.active, #page-signin.active { display: block; }
+
+    /* ── SAVED USERS TABLE ── */
+    .db-section { max-width: 490px; margin: 0 auto 40px; padding: 0 20px; }
+    .db-section h3 { font-size: 1rem; color: var(--accent); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+    .db-table { width: 100%; border-collapse: collapse; font-size: .78rem; }
+    .db-table th { background: var(--w20); padding: 8px 10px; text-align: left; color: var(--accent); font-weight: 600; }
+    .db-table td { padding: 8px 10px; border-bottom: 1px solid var(--w20); color: var(--w80); word-break: break-all; }
+    .db-table tr:hover td { background: var(--w10); }
+    .no-data { text-align: center; color: var(--w80); font-size: .82rem; padding: 14px; }
+
+    @media(max-width:540px) {
+      nav { padding: 13px 18px; }
+      nav ul { display: none; }
+      .card { padding: 26px 20px; }
+      .row-2 { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a class="logo" href="#"><span>☕</span> Coffee</a>
+  <ul>
+    <li><a href="#">Home</a></li>
+    <li><a href="#">About</a></li>
+    <li><a href="#">Menu</a></li>
+    <li><a href="#">Testimonials</a></li>
+    <li><a href="#">Gallery</a></li>
+    <li><a href="#">Contact</a></li>
+    <li><a href="#" id="nav-su" class="active" onclick="switchTab('signup');return false;">Signup</a></li>
+    <li><a href="#" id="nav-si"              onclick="switchTab('signin');return false;">Sign In</a></li>
+  </ul>
+  <button class="cart-btn" onclick="viewCart()">
+    <i class="fa fa-cart-shopping"></i> Cart
+    <span class="cart-count" id="cart-count">0</span>
+  </button>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <h1>Best coffee</h1>
+  <p>Join our coffee paradise — where every cup tells a story.</p>
+</div>
+
+<!-- TABS -->
+<div class="tab-wrap">
+  <div class="tab-toggle">
+    <button class="tab-btn active" id="tab-su" onclick="switchTab('signup')">Create Account</button>
+    <button class="tab-btn"        id="tab-si" onclick="switchTab('signin')">Sign In</button>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- ════ SIGNUP ════ -->
+  <div class="card" id="page-signup" style="display:block;">
+    <h2>Create Account ☕</h2>
+    <p class="sub">Start your coffee journey with us today!</p>
+
+    <div id="su-msg" class="msg"></div>
+
+    <div class="row-2">
+      <!-- First Name: letters only -->
+      <div class="form-group">
+        <label>First Name <span class="input-hint">A-Z only</span></label>
+        <div class="input-wrap">
+          <i class="fa fa-user icon"></i>
+          <input type="text" id="su-fname" placeholder="John" maxlength="30"
+            oninput="filterLetters(this); validate(this,'name','err-su-fname')">
+          <i class="status-icon" id="si-su-fname"></i>
+        </div>
+        <span class="field-err" id="err-su-fname">Only letters allowed (min 2).</span>
+      </div>
+      <!-- Last Name: letters only -->
+      <div class="form-group">
+        <label>Last Name <span class="input-hint">A-Z only</span></label>
+        <div class="input-wrap">
+          <i class="fa fa-user icon"></i>
+          <input type="text" id="su-lname" placeholder="Doe" maxlength="30"
+            oninput="filterLetters(this); validate(this,'name','err-su-lname')">
+          <i class="status-icon" id="si-su-lname"></i>
+        </div>
+        <span class="field-err" id="err-su-lname">Only letters allowed (min 2).</span>
+      </div>
+    </div>
+
+    <!-- Email: text + numbers + @ . -->
+    <div class="form-group">
+      <label>Email Address <span class="input-hint">text &amp; numbers</span></label>
+      <div class="input-wrap">
+        <i class="fa fa-envelope icon"></i>
+        <input type="text" id="su-email" placeholder="john@example.com" maxlength="80"
+          oninput="filterEmail(this); validate(this,'email','err-su-email')">
+        <i class="status-icon" id="si-su-email"></i>
+      </div>
+      <span class="field-err" id="err-su-email">Enter a valid email (e.g. john@gmail.com).</span>
+    </div>
+
+    <!-- Phone: numbers only -->
+    <div class="form-group">
+      <label>Phone Number <span class="input-hint">0-9 only</span></label>
+      <div class="input-wrap">
+        <i class="fa fa-phone icon"></i>
+        <input type="text" id="su-phone" placeholder="9876543210" maxlength="15"
+          oninput="filterDigits(this); validate(this,'phone','err-su-phone')">
+        <i class="status-icon" id="si-su-phone"></i>
+      </div>
+      <span class="field-err" id="err-su-phone">Only digits allowed (min 10).</span>
+    </div>
+
+    <!-- Password: min 6 chars -->
+    <div class="form-group">
+      <label>Password <span class="input-hint">min 6 chars</span></label>
+      <div class="input-wrap">
+        <i class="fa fa-lock icon"></i>
+        <input type="password" id="su-pass" placeholder="Create password" maxlength="40"
+          oninput="strengthCheck(this.value); validate(this,'pass','err-su-pass')">
+        <i class="status-icon" id="si-su-pass"></i>
+        <button class="eye-btn" type="button" onclick="toggleEye('su-pass',this)"><i class="fa fa-eye"></i></button>
+      </div>
+      <div class="str-bars"><span id="b1"></span><span id="b2"></span><span id="b3"></span><span id="b4"></span></div>
+      <div class="str-label" id="str-label"></div>
+      <span class="field-err" id="err-su-pass">Password must be at least 6 characters.</span>
+    </div>
+
+    <!-- Confirm Password -->
+    <div class="form-group">
+      <label>Confirm Password <span class="input-hint">must match</span></label>
+      <div class="input-wrap">
+        <i class="fa fa-lock icon"></i>
+        <input type="password" id="su-cpass" placeholder="Repeat password" maxlength="40"
+          oninput="validate(this,'cpass','err-su-cpass')">
+        <i class="status-icon" id="si-su-cpass"></i>
+        <button class="eye-btn" type="button" onclick="toggleEye('su-cpass',this)"><i class="fa fa-eye"></i></button>
+      </div>
+      <span class="field-err" id="err-su-cpass">Passwords do not match.</span>
+    </div>
+
+    <div class="check-row">
+      <input type="checkbox" id="su-terms">
+      <label for="su-terms">I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a></label>
+    </div>
+
+    <button class="btn-primary" id="su-btn" onclick="handleSignup()">Create Account</button>
+
+    <div class="divider">or continue with</div>
+    <div class="social-row">
+      <button class="btn-social"><i class="fab fa-google g-icon"></i> Google</button>
+      <button class="btn-social"><i class="fab fa-facebook-f fb-icon"></i> Facebook</button>
+    </div>
+    <p class="switch-link">Already have an account? <a onclick="switchTab('signin')">Sign In</a></p>
+  </div>
+
+  <!-- ════ SIGN IN ════ -->
+  <div class="card" id="page-signin">
+    <h2>Welcome Back ☕</h2>
+    <p class="sub">Sign in to your coffee account.</p>
+
+    <div id="si-msg" class="msg"></div>
+
+    <div class="form-group">
+      <label>Email Address <span class="input-hint">text &amp; numbers</span></label>
+      <div class="input-wrap">
+        <i class="fa fa-envelope icon"></i>
+        <input type="text" id="si-email" placeholder="john@example.com" maxlength="80"
+          oninput="filterEmail(this); validate(this,'email','err-si-email')">
+        <i class="status-icon" id="si-si-email"></i>
+      </div>
+      <span class="field-err" id="err-si-email">Enter a valid email.</span>
+    </div>
+
+    <div class="form-group">
+      <label>Password <span class="input-hint">min 6 chars</span></label>
+      <div class="input-wrap">
+        <i class="fa fa-lock icon"></i>
+        <input type="password" id="si-pass" placeholder="Your password" maxlength="40"
+          oninput="validate(this,'pass','err-si-pass')">
+        <i class="status-icon" id="si-si-pass"></i>
+        <button class="eye-btn" type="button" onclick="toggleEye('si-pass',this)"><i class="fa fa-eye"></i></button>
+      </div>
+      <span class="field-err" id="err-si-pass">Password must be at least 6 characters.</span>
+    </div>
+
+    <div class="rem-row">
+      <label><input type="checkbox" id="si-remember"> Remember me</label>
+      <span class="forgot" onclick="handleForgot()">Forgot Password?</span>
+    </div>
+
+    <button class="btn-primary" id="si-btn" onclick="handleSignin()">Sign In</button>
+
+    <div class="divider">or continue with</div>
+    <div class="social-row">
+      <button class="btn-social"><i class="fab fa-google g-icon"></i> Google</button>
+      <button class="btn-social"><i class="fab fa-facebook-f fb-icon"></i> Facebook</button>
+    </div>
+    <p class="switch-link">New here? <a onclick="switchTab('signup')">Create an Account</a></p>
+  </div>
+
+</div>
+
+
+<!-- SAVED USERS -->
+<div class="db-section" id="db-section" style="display:none;">
+  <h3><i class="fa fa-database"></i> Saved Users</h3>
+
+  <table class="db-table">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>First</th>
+        <th>Last</th>
+        <th>Email</th>
+        <th>Phone</th>
+        <th>Password</th>
+      </tr>
+    </thead>
+
+    <tbody id="db-body"></tbody>
+  </table>
+</div>
+
+
+
+<div id="toast"></div>
+
+<script>
+const SUPABASE_URL = "https://znvonvyyahmiewzqgkei.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpudm9udnl5YWhtaWV3enFna2VpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxNDkxMjIsImV4cCI6MjA5MTcyNTEyMn0.1rwUpQhkboNhoojEYGWO9gUYltR_QaAW4Bgbxyn0788";
+
+const supabaseClient = supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);
+
+/* ─── USER STORE ─── */
+let users = JSON.parse(localStorage.getItem('coffeeDB') || '[]');
+function saveDB() { localStorage.setItem('coffeeDB', JSON.stringify(users)); }
+
+/* ─── TAB ─── */
+function switchTab(tab) {
+  document.getElementById('page-signup').style.display = tab==='signup' ? 'block' : 'none';
+  document.getElementById('page-signin').style.display = tab==='signin' ? 'block' : 'none';
+  document.getElementById('tab-su').classList.toggle('active', tab==='signup');
+  document.getElementById('tab-si').classList.toggle('active', tab==='signin');
+  document.getElementById('nav-su').classList.toggle('active', tab==='signup');
+  document.getElementById('nav-si').classList.toggle('active', tab==='signin');
+}
+
+/* ─── FILTER FUNCTIONS (block bad keys at input level) ─── */
+
+/* Name fields: allow only letters + spaces */
+function filterLetters(inp) {
+  const cur = inp.selectionStart;
+  const clean = inp.value.replace(/[^a-zA-Z\s]/g, '');
+  if (clean !== inp.value) {
+    inp.value = clean;
+    inp.setSelectionRange(cur - 1, cur - 1);
+  }
+}
+
+/* Email: allow alphanumeric, @, ., _, -, + */
+function filterEmail(inp) {
+  const cur = inp.selectionStart;
+  const clean = inp.value.replace(/[^a-zA-Z0-9@._\-+]/g, '');
+  if (clean !== inp.value) {
+    inp.value = clean;
+    inp.setSelectionRange(cur - 1, cur - 1);
+  }
+}
+
+/* Phone: digits only */
+function filterDigits(inp) {
+  const cur = inp.selectionStart;
+  const clean = inp.value.replace(/[^0-9]/g, '');
+  if (clean !== inp.value) {
+    inp.value = clean;
+    inp.setSelectionRange(cur - 1, cur - 1);
+  }
+}
+
+/* ─── VALIDATION ─── */
+function isValid(inp, type) {
+  const v = inp.value.trim();
+  if (type === 'name')  return /^[a-zA-Z\s]{2,}$/.test(v);
+  if (type === 'email') return /^[a-zA-Z0-9][a-zA-Z0-9._\-+]*@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/.test(v);
+  if (type === 'phone') return /^[0-9]{7,15}$/.test(v);
+  if (type === 'pass')  return inp.value.length >= 6;
+  if (type === 'cpass') return inp.value === document.getElementById('su-pass').value && inp.value.length >= 6;
+  return false;
+}
+
+function validate(inp, type, errId) {
+  const ok = isValid(inp, type);
+  const err = document.getElementById(errId);
+  const statusId = 'si-' + inp.id;
+  const icon = document.getElementById(statusId);
+
+  inp.classList.toggle('valid',   ok);
+  inp.classList.toggle('invalid', !ok && inp.value.length > 0);
+
+  if (err) err.classList.toggle('show', !ok && inp.value.length > 0);
+
+  if (icon) {
+    if (inp.value.length === 0) {
+      icon.className = 'status-icon';
+    } else if (ok) {
+      icon.className = 'status-icon show ok';
+      icon.innerHTML = '<i class="fa fa-check-circle"></i>';
+    } else {
+      icon.className = 'status-icon show bad';
+      icon.innerHTML = '<i class="fa fa-times-circle"></i>';
+    }
+  }
+}
+
+/* ─── STRENGTH ─── */
+function strengthCheck(val) {
+  let s = 0;
+  if (val.length >= 6)         s++;
+  if (/[A-Z]/.test(val))      s++;
+  if (/[0-9]/.test(val))      s++;
+  if (/[^A-Za-z0-9]/.test(val)) s++;
+  const cols = ['#e05555','#e09520','#e0c820','#50d080'];
+  const lbls = ['Weak','Fair','Good','Strong'];
+  ['b1','b2','b3','b4'].forEach((id,i) => {
+    document.getElementById(id).style.background = i < s ? cols[s-1] : 'rgba(255,255,255,.12)';
+  });
+  document.getElementById('str-label').textContent = val.length ? lbls[s-1]||'' : '';
+}
+
+/* ─── EYE ─── */
+function toggleEye(id, btn) {
+  const inp = document.getElementById(id);
+  const ico = btn.querySelector('i');
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+  ico.className = inp.type === 'password' ? 'fa fa-eye' : 'fa fa-eye-slash';
+}
+
+/* ─── TOAST ─── */
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3200);
+}
+
+/* ─── MSG BAR ─── */
+function showMsg(id, text, type) {
+  const el = document.getElementById(id);
+  el.textContent = text;
+  el.className = 'msg ' + type + ' show';
+  setTimeout(() => el.classList.remove('show'), 4500);
+}
+
+/* ─── LOADING ─── */
+function setLoad(id, on, label) {
+  const b = document.getElementById(id);
+  b.innerHTML = on ? label + '<span class="spinner"></span>' : label;
+  b.disabled = on;
+}
+
+/* ─── RESET FIELD ─── */
+function resetField(id, errId) {
+  const inp = document.getElementById(id);
+  if (inp) { inp.value = ''; inp.classList.remove('valid','invalid'); }
+  const err = document.getElementById(errId);
+  if (err) err.classList.remove('show');
+  const icon = document.getElementById('si-' + id);
+  if (icon) icon.className = 'status-icon';
+}
+
+/* ─── RENDER DB TABLE ─── */
+function renderDB() {
+  const sec = document.getElementById('db-section');
+  const tbody = document.getElementById('db-body');
+  if (users.length === 0) { sec.style.display = 'none'; return; }
+  sec.style.display = 'block';
+  tbody.innerHTML = users.map((u, i) => `
+    <tr>
+      <td>${i+1}</td>
+      <td>${u.fname}</td>
+      <td>${u.lname}</td>
+      <td>${u.email}</td>
+      <td>${u.phone}</td>
+      <td>${'*'.repeat(u.pass.length)}</td>
+    </tr>`).join('');
+}
+renderDB();
+
+/* ─── SIGNUP ─── */
+async function handleSignup() {
+  const fname = document.getElementById('su-fname').value.trim();
+  const lname = document.getElementById('su-lname').value.trim();
+  const email = document.getElementById('su-email').value.trim();
+  const phone = document.getElementById('su-phone').value.trim();
+  const pass  = document.getElementById('su-pass').value;
+  const cpass = document.getElementById('su-cpass').value;
+  const terms = document.getElementById('su-terms').checked;
+
+  // force validate all fields
+  validate(document.getElementById('su-fname'), 'name',  'err-su-fname');
+  validate(document.getElementById('su-lname'), 'name',  'err-su-lname');
+  validate(document.getElementById('su-email'), 'email', 'err-su-email');
+  validate(document.getElementById('su-phone'), 'phone', 'err-su-phone');
+  validate(document.getElementById('su-pass'),  'pass',  'err-su-pass');
+  validate(document.getElementById('su-cpass'), 'cpass', 'err-su-cpass');
+
+  if (!fname || fname.length < 2)            return;
+  if (!lname || lname.length < 2)            return;
+  if (!/^[a-zA-Z0-9][a-zA-Z0-9._\-+]*@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/.test(email)) return;
+  if (!/^[0-9]{7,15}$/.test(phone))          return;
+  if (pass.length < 6)                       return;
+  if (pass !== cpass)                        return;
+  if (!terms) { showMsg('su-msg', '⚠️ Please accept the Terms of Service.', 'error'); return; }
+
+  if (users.find(u => u.email.toLowerCase() === email.toLowerCase())) {
+    showMsg('su-msg', '❌ An account with this email already exists.', 'error');
+    return;
+  }
+
+  setLoad('su-btn', true, 'Create Account');
+  setTimeout( async () => {
+const { data, error } = await supabaseClient
+  .from("user")
+  .insert([
+    {
+      fname: fname,
+      lname: lname,
+      email : email,
+      phone: phone,
+      pass: pass,
+      cpass: cpass
+    }
+  ]);
+
+if (error) {
+  console.log(error);
+  showMsg('su-msg', '❌ Supabase Error!', 'error');
+  return;
+
+}
+    setLoad('su-btn', false, 'Create Account');
+    showMsg('su-msg', '🎉 Account created successfully!', 'success');
+
+localStorage.setItem("coffeeUserLoggedIn", "true");
+
+// pending cart product
+const pendingProduct = JSON.parse(localStorage.getItem("pendingCartProduct"));
+
+if (pendingProduct) {
+
+  let cart = JSON.parse(localStorage.getItem("cart")) || [];
+
+  cart.push(pendingProduct);
+
+  localStorage.setItem("cart", JSON.stringify(cart));
+
+  localStorage.removeItem("pendingCartProduct");
+}
+
+// redirect back
+setTimeout(() => {
+  window.location.href = "index.html";
+}, 1500);
+
+    toast('Welcome, ' + fname + '! ☕');
+
+    // reset all fields
+    ['su-fname','su-lname','su-email','su-phone','su-pass','su-cpass'].forEach(id => resetField(id, 'err-'+id));
+    document.getElementById('su-terms').checked = false;
+    strengthCheck('');
+    renderDB();
+    setTimeout(() => switchTab('signin'), 1800);
+  }, 1300);
+}
+
+/* ─── SIGN IN ─── */
+function handleSignin() {
+  const email = document.getElementById('si-email').value.trim();
+  const pass  = document.getElementById('si-pass').value;
+
+  validate(document.getElementById('si-email'), 'email', 'err-si-email');
+  validate(document.getElementById('si-pass'),  'pass',  'err-si-pass');
+
+  if (!/^[a-zA-Z0-9][a-zA-Z0-9._\-+]*@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/.test(email)) return;
+  if (pass.length < 6) return;
+
+  setLoad('si-btn', true, 'Sign In');
+  setTimeout(() => {
+    const user = users.find(u => u.email.toLowerCase() === email.toLowerCase() && u.pass === pass);
+    setLoad('si-btn', false, 'Sign In');
+    if (user) {
+
+      localStorage.setItem("coffeeUserLoggedIn", "true");
+
+      showMsg('si-msg', '✅ Signed in successfully! Welcome back, ' + user.fname + '!', 'success');
+      toast('Welcome back, ' + user.fname + '! ☕');
+      document.getElementById('si-email').value = '';
+      document.getElementById('si-pass').value = '';
+      ['si-email','si-pass'].forEach(id => {
+        document.getElementById(id).classList.remove('valid','invalid');
+        const icon = document.getElementById('si-'+id);
+        if(icon) icon.className = 'status-icon';
+      });
+    } else {
+      showMsg('si-msg', '❌ Email or password is incorrect.', 'error');
+    }
+  }, 1200);
+}
+
+/* ─── FORGOT ─── */
+function handleForgot() {
+  const email = document.getElementById('si-email').value.trim();
+  if (!email) { showMsg('si-msg','💡 Enter your email above first, then click Forgot Password.','error'); return; }
+  if (!/^[a-zA-Z0-9][a-zA-Z0-9._\-+]*@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/.test(email)) {
+    showMsg('si-msg','❌ Please enter a valid email first.','error'); return;
+  }
+  const user = users.find(u => u.email.toLowerCase() === email.toLowerCase());
+  if (!user) { showMsg('si-msg','❌ No account found with this email.','error'); return; }
+  toast('Password reset link sent to ' + email + ' ✉️');
+  showMsg('si-msg','✅ Reset link sent! Check your inbox.','success');
+}
+
+/* ─── KEYDOWN BLOCK (hard block at keyboard level) ─── */
+document.addEventListener('keydown', function(e) {
+  const active = document.activeElement;
+  if (!active) return;
+
+  const id = active.id;
+
+  // name fields: block non-letter keys except control keys
+  if (id === 'su-fname' || id === 'su-lname') {
+    const allowed = ['Backspace','Delete','ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Tab','Home','End'];
+    if (allowed.includes(e.key)) return;
+    if (!/^[a-zA-Z\s]$/.test(e.key)) { e.preventDefault(); }
+  }
+
+  // phone: only digits + control
+  if (id === 'su-phone') {
+    const allowed = ['Backspace','Delete','ArrowLeft','ArrowRight','Tab','Home','End'];
+    if (allowed.includes(e.key)) return;
+    if (!/^[0-9]$/.test(e.key)) { e.preventDefault(); }
+  }
+});
+
+
+
+
+
+  function updateCartCount() {
+    let cart = JSON.parse(localStorage.getItem("cart")) || [];
+    document.getElementById("cart-count").innerText = cart.length;
+  }
+
+  updateCartCount();
+
+
+
+
+</script>
+</body>
+</html>
